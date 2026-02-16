@@ -61,6 +61,26 @@ static ImGui_ImplVulkanH_Window g_MainWindowData;
 static uint32_t                 g_MinImageCount = 2;
 static bool                     g_SwapChainRebuild = false;
 
+#ifdef _WIN32
+static void SetWin32Icon(SDL_Window* window)
+{
+    // Use SDL window properties to fetch HWND and apply the .ico without SDL_image dependency.
+    SDL_PropertiesID props = SDL_GetWindowProperties(window);
+    HWND hwnd = (HWND)SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
+    if (!hwnd)
+        return;
+
+    const char* icon_path = "assets/ico/clipboard_paste_20260217012532.png.ico";
+    HICON h_icon_big = (HICON)LoadImageA(nullptr, icon_path, IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
+    HICON h_icon_small = (HICON)LoadImageA(nullptr, icon_path, IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
+
+    if (h_icon_big)
+        SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)h_icon_big);
+    if (h_icon_small)
+        SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)h_icon_small);
+}
+#endif
+
 static void check_vk_result(VkResult err)
 {
     if (err == VK_SUCCESS)
@@ -371,6 +391,10 @@ int main(int, char**)
         printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
         return exit_code;
     }
+
+#ifdef _WIN32
+    SetWin32Icon(window);
+#endif
 
     ImVector<const char*> extensions;
     {

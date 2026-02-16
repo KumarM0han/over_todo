@@ -43,7 +43,11 @@ set(SOURCES
 	${SQLITE3_DIR}/sqlite3.c
 )
 
-add_executable(${PROJECT_NAME} ${SOURCES})
+if(WIN32)
+	add_executable(${PROJECT_NAME} WIN32 ${SOURCES})
+else()
+	add_executable(${PROJECT_NAME} ${SOURCES})
+endif()
 
 target_include_directories(${PROJECT_NAME}
 	PRIVATE
@@ -65,6 +69,12 @@ if(MSVC)
 else()
 	target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
 endif()
+
+# Emit DB file path at configure time
+target_compile_definitions(${PROJECT_NAME}
+    PRIVATE
+        DB_FILE_PATH="${CMAKE_SOURCE_DIR}/todos.db"
+)
 
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

@@ -1,8 +1,12 @@
 #include "Db.h"
 #include <cstdio>
 
+#ifndef DB_FILE_PATH
+#define DB_FILE_PATH "todos.db"
+#endif
+
 bool init_db(sqlite3 **db, char **err_msg, int *rc) {
-    *rc = sqlite3_open("todos.db", db);
+    *rc = sqlite3_open(DB_FILE_PATH, db);
     if (*rc != SQLITE_OK) {
         fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(*db));
         sqlite3_close(*db);

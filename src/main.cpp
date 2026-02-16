@@ -18,6 +18,9 @@
 #include "imgui_impl_vulkan.h"
 #include <stdio.h>          // printf, fprintf
 #include <stdlib.h>         // abort
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_vulkan.h>
@@ -606,3 +609,12 @@ cleanup:
 
     return exit_code;
 }
+
+#ifdef _WIN32
+// Provide WinMain so the GUI subsystem links while delegating to main.
+int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int)
+{
+    (void)hInst;
+    return main(__argc, __argv);
+}
+#endif

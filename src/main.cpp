@@ -62,6 +62,10 @@ static uint32_t                 g_MinImageCount = 2;
 static bool                     g_SwapChainRebuild = false;
 
 #ifdef _WIN32
+static HANDLE g_SingleInstanceMutex = nullptr;
+#endif
+
+#ifdef _WIN32
 static void SetWin32Icon(SDL_Window* window)
 {
     // Use SDL window properties to fetch HWND and apply the .ico without SDL_image dependency.
@@ -374,6 +378,21 @@ static void FramePresent(ImGui_ImplVulkanH_Window* wd)
 int main(int, char**)
 {   
     int exit_code = 1;
+#ifdef _WIN32
+    g_SingleInstanceMutex = CreateMutexA(nullptr, FALSE, "mytodoapp_single_instance_mutex");
+    if (!g_SingleInstanceMutex)
+    {
+        const DWORD err = GetLastError();
+        MessageBoxA(nullptr, "Failed to initialize single-instance guard. The app will exit.", "Todoist", MB_ICONERROR | MB_OK);
+        fprintf(stderr, "Error: failed to create mutex (code %lu)\n", err);
+        return exit_code;
+    }
+    if (GetLastError() == ERROR_ALREADY_EXISTS)
+    {
+        MessageBoxA(nullptr, "Another instance of Todoist is already running.", "Todoist", MB_ICONWARNING | MB_OK);
+        return 0;
+    }
+#endif
     // Setup SDL
     // [If using SDL_MAIN_USE_CALLBACKS: all code below until the main loop starts would likely be your SDL_AppInit() function]
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD | SDL_INIT_AUDIO))
@@ -630,6 +649,14 @@ cleanup:
     SDL_free(snd_general.buffer);
     SDL_DestroyWindow(window);
     SDL_Quit();
+
+#ifdef _WIN32
+    if (g_SingleInstanceMutex)
+    {
+        CloseHandle(g_SingleInstanceMutex);
+        g_SingleInstanceMutex = nullptr;
+    }
+#endif
 
     return exit_code;
 }

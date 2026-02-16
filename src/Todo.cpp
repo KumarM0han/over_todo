@@ -25,6 +25,7 @@ void UiData::Render() {
         ImGui::OpenPopup("Add Todo Popup");
     }
 
+    ImGui::Checkbox("Show Completed Todos", &show_completed_todos);
 
     Ui_AddTodoPopup();
     
@@ -60,11 +61,13 @@ void UiData::Ui_EditorWindow() {
         }
         ImGui::NewLine();
 
-        if (ImGui::Button("Add Description")) {
+        if (!ui_selected_todo->completed && ImGui::Button("Add Description")) {
             ImGui::OpenPopup("Add Description Popup");
         }
 
         Ui_AppendDescriptionPopup();
+
+        ImGui::SameLine();
 
         if (ImGui::Button("Toggle Completion")) {
             ui_selected_todo->completed = !ui_selected_todo->completed;
@@ -153,14 +156,26 @@ void UiData::Ui_ListDescription() {
 }
 
 void UiData::Ui_TodoList() {
-    for (auto i = pending_todos.begin(); i != pending_todos.end(); i++) {
-        assert(*i != nullptr);
-        assert((*i)->heading.data != nullptr);
-        assert(strlen((*i)->heading.data) > 0);
-        if (ImGui::Selectable((*i)->heading.data, ui_selected_todo == *i)) {
-            ui_selected_todo = *i;
+    if (show_completed_todos) {
+        for (Todo* t : completed_todos) {
+            assert(t != nullptr);
+            assert(t->heading.data != nullptr);
+            assert(strlen(t->heading.data) > 0);
+            if (ImGui::Selectable(t->heading.data, ui_selected_todo == t)) {
+                ui_selected_todo = t;
+            }
+            ImGui::NewLine();
         }
-        ImGui::NewLine();
+    } else {
+        for (auto i = pending_todos.begin(); i != pending_todos.end(); i++) {
+            assert(*i != nullptr);
+            assert((*i)->heading.data != nullptr);
+            assert(strlen((*i)->heading.data) > 0);
+            if (ImGui::Selectable((*i)->heading.data, ui_selected_todo == *i)) {
+                ui_selected_todo = *i;
+            }
+            ImGui::NewLine();
+        }
     }
 }
 

@@ -50,11 +50,13 @@ struct UiData {
     Todo* ui_selected_todo;
     Heading ui_last_header_entry;
     Description ui_last_description_entry;
+    bool show_completed_todos;
 
     UiData() : 
         ui_selected_todo(NULL),
         ui_last_header_entry{new char[HEADING_MAX_SIZE]{}, HEADING_MAX_SIZE},
-        ui_last_description_entry{new char[DESCRIPTION_MAX_SIZE]{}, DESCRIPTION_MAX_SIZE}
+        ui_last_description_entry{new char[DESCRIPTION_MAX_SIZE]{}, DESCRIPTION_MAX_SIZE},
+        show_completed_todos(false)
     {}
     void Render();
 

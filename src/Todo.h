@@ -68,4 +68,5 @@ private:
     void Ui_TodoList();
     void Ui_EditorWindow();
     void Ui_ListDescription();
+    void Ui_AppendDescriptionPopup();
 };

@@ -31,6 +31,7 @@ struct Info {
 struct Todo {
     Date created;
     Heading heading;
+    bool completed;
     
     list<Info*> info;
 
@@ -65,4 +66,6 @@ struct UiData {
 private:
     void Ui_AddTodoPopup();
     void Ui_TodoList();
+    void Ui_EditorWindow();
+    void Ui_ListDescription();
 };

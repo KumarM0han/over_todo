@@ -29,6 +29,7 @@ set(SOURCES
 	src/main.cpp
 	src/Todo.cpp
 	src/Log.cpp
+	src/Utils.cpp
 	src/imgui_demo.cpp
 	src/imgui_draw.cpp
 	${IMGUI_DIR}/imgui.cpp

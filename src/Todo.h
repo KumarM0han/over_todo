@@ -2,6 +2,7 @@
 
 #include <list>
 #include <cstring>
+#include "sqlite3.h"
 
 #define HEADING_MAX_SIZE 2048
 #define DESCRIPTION_MAX_SIZE 8192
@@ -65,10 +66,14 @@ struct UiData {
         delete[] ui_last_description_entry.data;
     }
 
+    void LoadTodos(sqlite3 *db);
+    void SaveTodos(sqlite3 *db);
+
 private:
     void Ui_AddTodoPopup();
     void Ui_TodoList();
     void Ui_EditorWindow();
     void Ui_ListDescription();
     void Ui_AppendDescriptionPopup();
+    void Ui_EditHeadingPopup();
 };

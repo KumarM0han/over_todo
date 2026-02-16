@@ -21,6 +21,10 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 #include "Todo.h"
+#include "sqlite3.h"
+#include "Db.h"
+
+#define _CRT_SECURE_NO_WARNINGS
 
 // This example doesn't compile with Emscripten yet! Awaiting SDL3 support.
 #ifdef __EMSCRIPTEN__
@@ -344,13 +348,14 @@ static void FramePresent(ImGui_ImplVulkanH_Window* wd)
 
 // Main code
 int main(int, char**)
-{
+{   
+    int exit_code = 1;
     // Setup SDL
     // [If using SDL_MAIN_USE_CALLBACKS: all code below until the main loop starts would likely be your SDL_AppInit() function]
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
     {
         printf("Error: SDL_Init(): %s\n", SDL_GetError());
-        return 1;
+        return exit_code;
     }
 
     // Create window with Vulkan graphics context
@@ -360,7 +365,7 @@ int main(int, char**)
     if (window == nullptr)
     {
         printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
-        return 1;
+        return exit_code;
     }
 
     ImVector<const char*> extensions;
@@ -378,7 +383,7 @@ int main(int, char**)
     if (SDL_Vulkan_CreateSurface(window, g_Instance, g_Allocator, &surface) == 0)
     {
         printf("Failed to create Vulkan surface.\n");
-        return 1;
+        return exit_code;
     }
 
     // Create Framebuffers
@@ -445,14 +450,25 @@ int main(int, char**)
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf");
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf");
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf");
-    //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf");
-    //IM_ASSERT(font != nullptr);
+    ImFont* font = io.Fonts->AddFontFromFileTTF("assets/NotoSansMono-Regular.ttf", 14.0f * main_scale);
+    IM_ASSERT(font != nullptr);
 
     // Our state
     // bool show_demo_window = true;
     // bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+    // My data
+    sqlite3 *db = NULL;
+    int sqlite_rc = 0;
+    char *sqlite_err_msg = 0;
+    if (!init_db(&db, &sqlite_err_msg, &sqlite_rc)) {
+        fprintf(stderr, "Failed to initialize database: %s\n", sqlite_err_msg);
+        sqlite3_free(sqlite_err_msg);
+        goto cleanup;
+    }
     UiData ui_data = {};
+    ui_data.LoadTodos(db);
 
     // Main loop
     bool done = false;
@@ -551,6 +567,8 @@ int main(int, char**)
         }
     }
 
+    ui_data.SaveTodos(db);
+cleanup:
     // Cleanup
     // [If using SDL_MAIN_USE_CALLBACKS: all code below would likely be your SDL_AppQuit() function]
     err = vkDeviceWaitIdle(g_Device);
@@ -565,5 +583,5 @@ int main(int, char**)
     SDL_DestroyWindow(window);
     SDL_Quit();
 
-    return 0;
+    return exit_code;
 }

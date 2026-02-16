@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 
-project(mytodoapp LANGUAGES CXX)
+project(mytodoapp LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -24,12 +24,14 @@ find_package(Vulkan REQUIRED)
 find_package(SDL3 REQUIRED CONFIG)
 
 set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendored/imgui)
+set(SQLITE3_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendored/sqlite3)
 
 set(SOURCES
 	src/main.cpp
 	src/Todo.cpp
 	src/Log.cpp
 	src/Utils.cpp
+	src/Db.cpp
 	src/imgui_demo.cpp
 	src/imgui_draw.cpp
 	${IMGUI_DIR}/imgui.cpp
@@ -37,6 +39,7 @@ set(SOURCES
 	${IMGUI_DIR}/imgui_widgets.cpp
 	${IMGUI_DIR}/imgui_impl_sdl3.cpp
 	${IMGUI_DIR}/imgui_impl_vulkan.cpp
+	${SQLITE3_DIR}/sqlite3.c
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -44,6 +47,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME}
 	PRIVATE
 		${IMGUI_DIR}
+		${SQLITE3_DIR}
 		${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
@@ -55,6 +59,8 @@ target_link_libraries(${PROJECT_NAME}
 
 if(MSVC)
 	target_compile_options(${PROJECT_NAME} PRIVATE /W4 /permissive-)
+	# Silence MSVC/clang-cl secure CRT deprecation noise (strncpy, sscanf, etc.).
+	target_compile_definitions(${PROJECT_NAME} PRIVATE _CRT_SECURE_NO_WARNINGS)
 else()
 	target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
 endif()

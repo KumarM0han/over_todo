@@ -7,7 +7,6 @@
 #include "Utils.h"
 #include "sqlite3.h"
 
-#define _CRT_SECURE_NO_WARNINGS
 
 const char *UiData::ui_heading = "Todos";
 
@@ -401,6 +400,12 @@ void UiData::LoadTodos(sqlite3 *db) {
 void UiData::SaveTodos(sqlite3 *db) {
     char *err_msg = nullptr;
     int rc;
+    int pending_index = 0;
+    int completed_index = 0;
+
+    const char *delete_pending_sql = "DELETE FROM pending;";
+    const char *delete_completed_sql = "DELETE FROM completed;";
+    const char *delete_descriptions_sql = "DELETE FROM descriptions;";
 
     rc = sqlite3_exec(db, "BEGIN IMMEDIATE TRANSACTION;", nullptr, nullptr, &err_msg);
     if (rc != SQLITE_OK) {
@@ -409,7 +414,6 @@ void UiData::SaveTodos(sqlite3 *db) {
         return;
     }
 
-    const char *delete_pending_sql = "DELETE FROM pending;";
     rc = sqlite3_exec(db, delete_pending_sql, 0, 0, &err_msg);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "SQL error: %s\n", err_msg);
@@ -417,7 +421,6 @@ void UiData::SaveTodos(sqlite3 *db) {
         goto rollback;
     }
 
-    const char *delete_completed_sql = "DELETE FROM completed;";
     rc = sqlite3_exec(db, delete_completed_sql, 0, 0, &err_msg);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "SQL error: %s\n", err_msg);
@@ -425,7 +428,6 @@ void UiData::SaveTodos(sqlite3 *db) {
         goto rollback;
     }
 
-    const char *delete_descriptions_sql = "DELETE FROM descriptions;";
     rc = sqlite3_exec(db, delete_descriptions_sql, 0, 0, &err_msg);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "SQL error: %s\n", err_msg);
@@ -433,7 +435,6 @@ void UiData::SaveTodos(sqlite3 *db) {
         goto rollback;
     }
 
-    int pending_index = 0;
     for (Todo* t : pending_todos) {
         const char *insert_sql = "INSERT INTO pending (id, heading, description, created, completed) VALUES (?, ?, ?, ?, ?);";
         sqlite3_stmt *stmt;
@@ -478,7 +479,6 @@ void UiData::SaveTodos(sqlite3 *db) {
         sqlite3_finalize(desc_stmt);
     }
 
-    int completed_index = 0;
     for (Todo* t : completed_todos) {
         const char *insert_sql = "INSERT INTO completed (id, heading, description, created, completed) VALUES (?, ?, ?, ?, ?);";
         sqlite3_stmt *stmt;

@@ -24,7 +24,6 @@
 #include "sqlite3.h"
 #include "Db.h"
 
-#define _CRT_SECURE_NO_WARNINGS
 
 // This example doesn't compile with Emscripten yet! Awaiting SDL3 support.
 #ifdef __EMSCRIPTEN__
@@ -458,6 +457,9 @@ int main(int, char**)
     // bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
+    UiData ui_data = {};
+    bool done = false;
+
     // My data
     sqlite3 *db = NULL;
     int sqlite_rc = 0;
@@ -465,13 +467,13 @@ int main(int, char**)
     if (!init_db(&db, &sqlite_err_msg, &sqlite_rc)) {
         fprintf(stderr, "Failed to initialize database: %s\n", sqlite_err_msg);
         sqlite3_free(sqlite_err_msg);
+        exit_code = 1;
         goto cleanup;
     }
-    UiData ui_data = {};
+    exit_code = 0;
     ui_data.LoadTodos(db);
 
     // Main loop
-    bool done = false;
     while (!done)
     {
         // Poll and handle events (inputs, window resize, etc.)

@@ -6,7 +6,7 @@
 #include "imgui.h"
 #include "Utils.h"
 #include "sqlite3.h"
-
+#include "Audio.h"
 
 const char *UiData::ui_heading = "Todos";
 
@@ -26,6 +26,7 @@ void UiData::Render() {
     ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
 
     if (ImGui::Button("Add Todo")) {
+        snd_general->Play();
         ImGui::OpenPopup("Add Todo Popup");
     }
 
@@ -56,6 +57,7 @@ void UiData::Ui_EditorWindow() {
         ImGui::NewLine();
 
         if (ImGui::Button("Edit Heading")) {
+            snd_general->Play();
             ImGui::OpenPopup("Edit Heading Popup");
         }
 
@@ -76,6 +78,7 @@ void UiData::Ui_EditorWindow() {
 
         ImGui::BeginDisabled(ui_selected_todo->completed);
         if (ImGui::Button("Add Description")) {
+            snd_general->Play();
             ImGui::OpenPopup("Add Description Popup");
         }
         ImGui::EndDisabled();
@@ -87,9 +90,11 @@ void UiData::Ui_EditorWindow() {
         if (ImGui::Button("Toggle Completion")) {
             ui_selected_todo->completed = !ui_selected_todo->completed;
             if (ui_selected_todo->completed) {
+                snd_add->Play();
                 pending_todos.remove(ui_selected_todo);
                 completed_todos.push_front(ui_selected_todo);
             } else {
+                snd_cancel->Play();
                 completed_todos.remove(ui_selected_todo);
                 pending_todos.push_front(ui_selected_todo);
             }
@@ -118,6 +123,7 @@ void UiData::Ui_EditHeadingPopup() {
         ImGui::PopItemWidth();
 
         if (ImGui::Button("Save") && strlen(ui_last_header_entry.data) > 0) {
+            snd_add->Play();
             strncpy(ui_selected_todo->heading.data, ui_last_header_entry.data, ui_selected_todo->heading.size);
             memset(ui_last_header_entry.data, 0, ui_last_header_entry.size);
             
@@ -125,6 +131,7 @@ void UiData::Ui_EditHeadingPopup() {
         }
 
         if (ImGui::Button("Cancel")) {
+            snd_cancel->Play();
             memset(ui_last_header_entry.data, 0, ui_last_header_entry.size);
             ImGui::CloseCurrentPopup();
         }
@@ -149,6 +156,7 @@ void UiData::Ui_AppendDescriptionPopup() {
         ImGui::PopItemWidth();
 
         if (ImGui::Button("Append Description") && strlen(ui_last_description_entry.data) > 0) {
+            snd_add->Play();
             Info *new_info = new Info();
             new_info->added.data = (char *)calloc(DATE_MAX_SIZE, sizeof(char));
             new_info->added.size = DATE_MAX_SIZE;
@@ -163,6 +171,7 @@ void UiData::Ui_AppendDescriptionPopup() {
         }
 
         if (ImGui::Button("Cancel")) {
+            snd_cancel->Play();
             memset(ui_last_description_entry.data, 0, DESCRIPTION_MAX_SIZE);
             ImGui::CloseCurrentPopup();
         }
@@ -248,6 +257,7 @@ void UiData::Ui_AddTodoPopup() {
         ImGui::PopItemWidth();
 
         if (ImGui::Button("Add") && strlen(ui_last_header_entry.data) > 0) {
+            snd_add->Play();
             Todo *new_todo = new Todo();
             new_todo->completed = false;
             new_todo->created.data = (char *)calloc(DATE_MAX_SIZE, sizeof(char));
@@ -279,6 +289,7 @@ void UiData::Ui_AddTodoPopup() {
         }
 
         if (ImGui::Button("Cancel")) {
+            snd_cancel->Play();
             memset(ui_last_header_entry.data, 0, HEADING_MAX_SIZE);
             memset(ui_last_description_entry.data, 0, DESCRIPTION_MAX_SIZE);
             ImGui::CloseCurrentPopup();

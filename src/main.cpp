@@ -19,10 +19,12 @@
 #include <stdio.h>          // printf, fprintf
 #include <stdlib.h>         // abort
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_vulkan.h>
 #include "Todo.h"
 #include "sqlite3.h"
 #include "Db.h"
+#include "Audio.h"
 
 
 // This example doesn't compile with Emscripten yet! Awaiting SDL3 support.
@@ -351,7 +353,7 @@ int main(int, char**)
     int exit_code = 1;
     // Setup SDL
     // [If using SDL_MAIN_USE_CALLBACKS: all code below until the main loop starts would likely be your SDL_AppInit() function]
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD | SDL_INIT_AUDIO))
     {
         printf("Error: SDL_Init(): %s\n", SDL_GetError());
         return exit_code;
@@ -456,8 +458,19 @@ int main(int, char**)
     // bool show_demo_window = true;
     // bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    
+    SoundEffect snd_add;
+    SoundEffect snd_cancel;
+    SoundEffect snd_general;
+
+    snd_add.Load("assets/MENU A_SELECT.wav");
+    snd_cancel.Load("assets/MENU A - Back.wav");
+    snd_general.Load("assets/Click_Standard_00.wav");
 
     UiData ui_data = {};
+    ui_data.snd_add = &snd_add;
+    ui_data.snd_cancel = &snd_cancel;
+    ui_data.snd_general = &snd_general;
     bool done = false;
 
     // My data
@@ -582,6 +595,12 @@ cleanup:
     CleanupVulkanWindow(&g_MainWindowData);
     CleanupVulkan();
 
+    SDL_DestroyAudioStream(snd_add.stream);
+    SDL_DestroyAudioStream(snd_cancel.stream);
+    SDL_DestroyAudioStream(snd_general.stream);
+    SDL_free(snd_add.buffer);
+    SDL_free(snd_cancel.buffer);
+    SDL_free(snd_general.buffer);
     SDL_DestroyWindow(window);
     SDL_Quit();
 

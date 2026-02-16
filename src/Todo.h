@@ -4,6 +4,8 @@
 #include <cstring>
 #include "sqlite3.h"
 
+struct SoundEffect;
+
 #define HEADING_MAX_SIZE 2048
 #define DESCRIPTION_MAX_SIZE 8192
 #define DATE_MAX_SIZE 11
@@ -52,12 +54,15 @@ struct UiData {
     Heading ui_last_header_entry;
     Description ui_last_description_entry;
     bool show_completed_todos;
+    SoundEffect *snd_add;
+    SoundEffect *snd_cancel;
+    SoundEffect *snd_general;
 
     UiData() : 
         ui_selected_todo(NULL),
         ui_last_header_entry{new char[HEADING_MAX_SIZE]{}, HEADING_MAX_SIZE},
         ui_last_description_entry{new char[DESCRIPTION_MAX_SIZE]{}, DESCRIPTION_MAX_SIZE},
-        show_completed_todos(false)
+        show_completed_todos(false), snd_add(nullptr), snd_cancel(nullptr), snd_general(nullptr)
     {}
     void Render();
 

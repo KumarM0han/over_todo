@@ -20,6 +20,7 @@
 #include <stdlib.h>         // abort
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
+#include "Todo.h"
 
 // This example doesn't compile with Emscripten yet! Awaiting SDL3 support.
 #ifdef __EMSCRIPTEN__
@@ -355,7 +356,7 @@ int main(int, char**)
     // Create window with Vulkan graphics context
     float main_scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
     SDL_WindowFlags window_flags = SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
-    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL3+Vulkan example", (int)(1280 * main_scale), (int)(800 * main_scale), window_flags);
+    SDL_Window* window = SDL_CreateWindow("Todoist", (int)(1280 * main_scale), (int)(800 * main_scale), window_flags);
     if (window == nullptr)
     {
         printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
@@ -385,7 +386,12 @@ int main(int, char**)
     SDL_GetWindowSize(window, &w, &h);
     ImGui_ImplVulkanH_Window* wd = &g_MainWindowData;
     SetupVulkanWindow(wd, surface, w, h);
+
+    // Ensure windowed (non-exclusive) mode and give it normal chrome; then maximize for a windowed-fullscreen feel.
+    SDL_SetWindowFullscreen(window, false);
+    SDL_SetWindowBordered(window, true);
     SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+    SDL_MaximizeWindow(window);
     SDL_ShowWindow(window);
 
     // Setup Dear ImGui context
@@ -443,9 +449,10 @@ int main(int, char**)
     //IM_ASSERT(font != nullptr);
 
     // Our state
-    bool show_demo_window = true;
-    bool show_another_window = false;
+    // bool show_demo_window = true;
+    // bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    UiData ui_data = {};
 
     // Main loop
     bool done = false;
@@ -490,12 +497,14 @@ int main(int, char**)
         ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
 
+        ui_data.Render();
+
         // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-        if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
+        // if (show_demo_window)
+        //     ImGui::ShowDemoWindow(&show_demo_window);
 
         // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
-        {
+        /*{
             static float f = 0.0f;
             static int counter = 0;
 
@@ -525,7 +534,7 @@ int main(int, char**)
             if (ImGui::Button("Close Me"))
                 show_another_window = false;
             ImGui::End();
-        }
+        }*/
 
         // Rendering
         ImGui::Render();

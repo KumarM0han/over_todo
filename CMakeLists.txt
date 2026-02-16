@@ -27,6 +27,8 @@ set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendored/imgui)
 
 set(SOURCES
 	src/main.cpp
+	src/Todo.cpp
+	src/Log.cpp
 	src/imgui_demo.cpp
 	src/imgui_draw.cpp
 	${IMGUI_DIR}/imgui.cpp
@@ -55,3 +57,6 @@ if(MSVC)
 else()
 	target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
 endif()
+
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

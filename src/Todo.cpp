@@ -61,9 +61,11 @@ void UiData::Ui_EditorWindow() {
         }
         ImGui::NewLine();
 
-        if (!ui_selected_todo->completed && ImGui::Button("Add Description")) {
+        ImGui::BeginDisabled(ui_selected_todo->completed);
+        if (ImGui::Button("Add Description")) {
             ImGui::OpenPopup("Add Description Popup");
         }
+        ImGui::EndDisabled();
 
         Ui_AppendDescriptionPopup();
 
@@ -91,6 +93,9 @@ void UiData::Ui_AppendDescriptionPopup() {
     if (ImGui::BeginPopupModal("Add Description Popup")) {
         ImGui::PushItemWidth(-FLT_MIN);
         ImGui::Text("%s", "Add Description");
+        if (ImGui::IsWindowAppearing()) {
+            ImGui::SetKeyboardFocusHere(0);
+        }
         ImGui::InputTextMultiline(
             "##new_description",
             ui_last_description_entry.data,
@@ -161,7 +166,7 @@ void UiData::Ui_TodoList() {
             assert(t != nullptr);
             assert(t->heading.data != nullptr);
             assert(strlen(t->heading.data) > 0);
-            if (ImGui::Selectable(t->heading.data, ui_selected_todo == t)) {
+            if (ImGui::Selectable(t->heading.data, ui_selected_todo == t, ImGuiSelectableFlags_None, ImVec2(0, ImGui::GetTextLineHeight() * 1.5))) {
                 ui_selected_todo = t;
             }
             ImGui::NewLine();
@@ -171,7 +176,7 @@ void UiData::Ui_TodoList() {
             assert(*i != nullptr);
             assert((*i)->heading.data != nullptr);
             assert(strlen((*i)->heading.data) > 0);
-            if (ImGui::Selectable((*i)->heading.data, ui_selected_todo == *i)) {
+            if (ImGui::Selectable((*i)->heading.data, ui_selected_todo == *i, ImGuiSelectableFlags_None, ImVec2(0, ImGui::GetTextLineHeight() * 1.5))) {
                 ui_selected_todo = *i;
             }
             ImGui::NewLine();
@@ -183,6 +188,9 @@ void UiData::Ui_AddTodoPopup() {
     if (ImGui::BeginPopupModal("Add Todo Popup")) {
         ImGui::PushItemWidth(-FLT_MIN);
         ImGui::Text("%s", "Add Todo");
+        if (ImGui::IsWindowAppearing()) {
+            ImGui::SetKeyboardFocusHere(0);
+        }
         ImGui::InputText(
                 "##new_todo_header",
                 ui_last_header_entry.data,

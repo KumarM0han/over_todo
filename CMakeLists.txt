@@ -44,6 +44,10 @@ set(SOURCES
 )
 
 if(WIN32)
+	list(APPEND SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/appicon.rc)
+endif()
+
+if(WIN32)
 	add_executable(${PROJECT_NAME} WIN32 ${SOURCES})
 else()
 	add_executable(${PROJECT_NAME} ${SOURCES})

@@ -33,3 +33,37 @@ long days_since(const char *date_str)
     double diff_seconds = difftime(now, past);
     return (long)(diff_seconds / 86400);
 }
+
+long days_since_2(const char *start, const char *end)
+{
+    int st_year, st_month, st_day;
+    if (sscanf(start, "%d/%d/%d", &st_year, &st_month, &st_day) != 3)
+        return -1;
+    
+    int end_year, end_month, end_day;
+    if (sscanf(end, "%d/%d/%d", &end_year, &end_month, &end_day) != 3)
+        return -1;
+    
+    struct tm tm_start = {0};
+    tm_start.tm_year = st_year - 1900;
+    tm_start.tm_mon = st_month - 1;
+    tm_start.tm_mday = st_day;
+    tm_start.tm_hour = 0;
+    tm_start.tm_min = 0;
+    tm_start.tm_sec = 0;
+    time_t start_time = mktime(&tm_start);
+
+    struct tm tm_end = {0};
+    tm_end.tm_year = end_year - 1900;
+    tm_end.tm_mon = end_month - 1;
+    tm_end.tm_mday = end_day;
+    tm_end.tm_hour = 0;
+    tm_end.tm_min = 0;
+    tm_end.tm_sec = 0;
+    time_t end_time = mktime(&tm_end);
+
+    if (start_time == (time_t)-1 || end_time == (time_t)-1)
+        return -1;
+    double diff_seconds = difftime(end_time, start_time);
+    return (long)(diff_seconds / 86400);
+}

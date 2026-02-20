@@ -65,8 +65,13 @@ void UiData::Ui_EditorWindow() {
 
         ImGui::NewLine();
 
-        ImGui::TextDisabled("Created on: %s (%ld days ago)", ui_selected_todo->created.data, days_since(ui_selected_todo->created.data));
-        
+        ImGui::TextDisabled("Created on: %s", ui_selected_todo->created.data);
+        if (ui_selected_todo->completed) {
+            ImGui::TextDisabled("Completed on: %s (%ld days)", ui_selected_todo->completed_date.data, days_since_2(ui_selected_todo->created.data, ui_selected_todo->completed_date.data));
+        } else {
+            ImGui::TextDisabled("Open for: %ld days", days_since(ui_selected_todo->created.data));
+        }
+
         ImGui::TextDisabled("Status: ");
         ImGui::SameLine();
         if (ui_selected_todo->completed) {
@@ -93,10 +98,12 @@ void UiData::Ui_EditorWindow() {
                 snd_add->Play();
                 pending_todos.remove(ui_selected_todo);
                 completed_todos.push_front(ui_selected_todo);
+                get_current_date(ui_selected_todo->completed_date.data, ui_selected_todo->completed_date.size);
             } else {
                 snd_cancel->Play();
                 completed_todos.remove(ui_selected_todo);
                 pending_todos.push_front(ui_selected_todo);
+                memset(ui_selected_todo->completed_date.data, 0, ui_selected_todo->completed_date.size);
             }
         }
 
@@ -186,7 +193,7 @@ void UiData::Ui_ListDescription() {
             itr != ui_selected_todo->info.end();
             itr++)
     {
-        ImGui::TextDisabled("Added on: %s (%ld days ago)", (*itr)->added.data, days_since((*itr)->added.data));
+        ImGui::TextDisabled("Added on: %s", (*itr)->added.data);
         ImGui::NewLine();
         ImGui::PushID((*itr)->description.data);
 
@@ -260,6 +267,8 @@ void UiData::Ui_AddTodoPopup() {
             snd_add->Play();
             Todo *new_todo = new Todo();
             new_todo->completed = false;
+            new_todo->completed_date.data = (char *)calloc(DATE_MAX_SIZE, sizeof(char));
+            new_todo->completed_date.size = DATE_MAX_SIZE;
             new_todo->created.data = (char *)calloc(DATE_MAX_SIZE, sizeof(char));
             new_todo->created.size = DATE_MAX_SIZE;
             get_current_date(new_todo->created.data, new_todo->created.size);
@@ -304,7 +313,7 @@ void UiData::LoadTodos(sqlite3 *db) {
     std::unordered_map<int, Todo*> pending_map;
     std::unordered_map<int, Todo*> completed_map;
 
-    const char *sql = "SELECT id, heading, description, created, completed FROM pending;";
+    const char *sql = "SELECT id, heading, description, created, completed, completed_date FROM pending;";
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
         fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
         return;
@@ -330,13 +339,20 @@ void UiData::LoadTodos(sqlite3 *db) {
             strncpy(new_todo->created.data, (const char *)created_text, DATE_MAX_SIZE - 1);
         }
 
+        const unsigned char *completed_date_text = sqlite3_column_text(stmt, 5);
+        new_todo->completed_date.data = (char *)calloc(DATE_MAX_SIZE, sizeof(char));
+        new_todo->completed_date.size = DATE_MAX_SIZE;
+        if (completed_date_text) {
+            strncpy(new_todo->completed_date.data, (const char *)completed_date_text, DATE_MAX_SIZE - 1);
+        }
+
         pending_todos.push_back(new_todo);
         pending_map[todo_id] = new_todo;
     }
 
     sqlite3_finalize(stmt);
 
-    sql = "SELECT id, heading, description, created FROM completed;";
+    sql = "SELECT id, heading, description, created, completed_date FROM completed;";
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
         fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
         return;
@@ -360,6 +376,13 @@ void UiData::LoadTodos(sqlite3 *db) {
         new_todo->created.size = DATE_MAX_SIZE;
         if (created_text) {
             strncpy(new_todo->created.data, (const char *)created_text, DATE_MAX_SIZE - 1);
+        }
+
+        const unsigned char *completed_date_text = sqlite3_column_text(stmt, 4);
+        new_todo->completed_date.data = (char *)calloc(DATE_MAX_SIZE, sizeof(char));
+        new_todo->completed_date.size = DATE_MAX_SIZE;
+        if (completed_date_text) {
+            strncpy(new_todo->completed_date.data, (const char *)completed_date_text, DATE_MAX_SIZE - 1);
         }
 
         completed_todos.push_back(new_todo);
@@ -447,7 +470,7 @@ void UiData::SaveTodos(sqlite3 *db) {
     }
 
     for (Todo* t : pending_todos) {
-        const char *insert_sql = "INSERT INTO pending (id, heading, description, created, completed) VALUES (?, ?, ?, ?, ?);";
+        const char *insert_sql = "INSERT INTO pending (id, heading, description, created, completed, completed_date) VALUES (?, ?, ?, ?, ?, ?);";
         sqlite3_stmt *stmt;
         if (sqlite3_prepare_v2(db, insert_sql, -1, &stmt, nullptr) != SQLITE_OK) {
             fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
@@ -462,6 +485,11 @@ void UiData::SaveTodos(sqlite3 *db) {
 
         sqlite3_bind_text(stmt, 4, t->created.data, -1, SQLITE_STATIC);
         sqlite3_bind_int(stmt, 5, t->completed ? 1 : 0);
+        if (t->completed_date.data && t->completed_date.data[0] != '\0') {
+            sqlite3_bind_text(stmt, 6, t->completed_date.data, -1, SQLITE_STATIC);
+        } else {
+            sqlite3_bind_null(stmt, 6);
+        }
 
         if (sqlite3_step(stmt) != SQLITE_DONE) {
             fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
@@ -491,7 +519,7 @@ void UiData::SaveTodos(sqlite3 *db) {
     }
 
     for (Todo* t : completed_todos) {
-        const char *insert_sql = "INSERT INTO completed (id, heading, description, created, completed) VALUES (?, ?, ?, ?, ?);";
+        const char *insert_sql = "INSERT INTO completed (id, heading, description, created, completed, completed_date) VALUES (?, ?, ?, ?, ?, ?);";
         sqlite3_stmt *stmt;
         if (sqlite3_prepare_v2(db, insert_sql, -1, &stmt, nullptr) != SQLITE_OK) {
             fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
@@ -505,6 +533,11 @@ void UiData::SaveTodos(sqlite3 *db) {
 
         sqlite3_bind_text(stmt, 4, t->created.data, -1, SQLITE_STATIC);
         sqlite3_bind_int(stmt, 5, t->completed ? 1 : 0);
+        if (t->completed_date.data && t->completed_date.data[0] != '\0') {
+            sqlite3_bind_text(stmt, 6, t->completed_date.data, -1, SQLITE_STATIC);
+        } else {
+            sqlite3_bind_null(stmt, 6);
+        }
 
         if (sqlite3_step(stmt) != SQLITE_DONE) {
             fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));

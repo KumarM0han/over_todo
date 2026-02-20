@@ -35,6 +35,7 @@ struct Todo {
     Date created;
     Heading heading;
     bool completed;
+    Date completed_date;
     
     list<Info*> info;
 

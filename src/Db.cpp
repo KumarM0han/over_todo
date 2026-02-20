@@ -13,7 +13,7 @@ bool init_db(sqlite3 **db, char **err_msg, int *rc) {
         return false;
     }
 
-    const char *sql = "CREATE TABLE IF NOT EXISTS pending (id INTEGER PRIMARY KEY, heading TEXT NOT NULL, description TEXT, created DATE NOT NULL, completed BOOLEAN NOT NULL);";
+    const char *sql = "CREATE TABLE IF NOT EXISTS pending (id INTEGER PRIMARY KEY, heading TEXT NOT NULL, description TEXT, created DATE NOT NULL, completed BOOLEAN NOT NULL, completed_date DATE);";
     
     *rc = sqlite3_exec(*db, sql, 0, 0, err_msg);
     if (*rc != SQLITE_OK) {
@@ -23,7 +23,7 @@ bool init_db(sqlite3 **db, char **err_msg, int *rc) {
         return false;
     }
 
-    sql = "CREATE TABLE IF NOT EXISTS completed (id INTEGER PRIMARY KEY, heading TEXT NOT NULL, description TEXT, created DATE NOT NULL, completed BOOLEAN NOT NULL);";
+    sql = "CREATE TABLE IF NOT EXISTS completed (id INTEGER PRIMARY KEY, heading TEXT NOT NULL, description TEXT, created DATE NOT NULL, completed BOOLEAN NOT NULL, completed_date DATE);";
     *rc = sqlite3_exec(*db, sql, 0, 0, err_msg);
     if (*rc != SQLITE_OK) {
         fprintf(stderr, "SQL error: %s\n", *err_msg);
